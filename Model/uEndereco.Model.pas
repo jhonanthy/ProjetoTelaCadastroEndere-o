@@ -80,8 +80,6 @@ end;
 
 procedure TEndereco.SetLogradouro(const Value: string);
 begin
-  if Value = ''  then
-  raise Exception.Create('Não foi informado um Logradouro , por favor informar!');
   FLogradouro := Value;
 end;
 

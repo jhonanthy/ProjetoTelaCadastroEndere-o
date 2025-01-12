@@ -363,6 +363,11 @@ begin
      exit;
    end;
 
+   if ((Length(trim(MaskEdtCEP.Text))>3 ) or (Length(trim(edtLogradouro.Text))>3) or (Length(trim(edtLocalidade.Text))>3)) then
+   begin
+     application.MessageBox('Caro Usuario os campos a serem utilizados, devem ter no minimo 3 caracteres com excessão do campo UF!','Informação',MB_OK+MB_ICONINFORMATION);
+     exit;
+   end;
    if trim(MaskEdtCEP.Text) <> '' then
      FTipoConsulta := toCEP
    else

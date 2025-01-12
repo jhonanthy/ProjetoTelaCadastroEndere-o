@@ -587,6 +587,23 @@ object frmCadastro: TfrmCadastro
               OnClick = RbConsultaviaJsonClick
             end
           end
+          object Memo1: TMemo
+            Left = 123
+            Top = 27
+            Width = 454
+            Height = 100
+            Lines.Strings = (
+              'Caro usuario , seja bem vindo.'
+              
+                'Para iniciar a consulta preencha o CEP ou o endere'#231'o completo e ' +
+                'escolha o metodo de '
+              'retorno da API.'
+              'e Clique em Consulta.'
+              'Desde j'#225' agradecemos a utiliza'#231#227'o de nossa aplica'#231#227'o.'
+              ''
+              'Att: Dev.')
+            TabOrder = 7
+          end
         end
       end
       object tbConsulta: TTabSheet
@@ -621,13 +638,12 @@ object frmCadastro: TfrmCadastro
             Width = 146
             Height = 21
             Style = csDropDownList
-            ItemIndex = 3
+            ItemIndex = 2
             TabOrder = 1
             Text = 'Todos os Registros'
             OnChange = cbPesquisaChange
             Items.Strings = (
               'Codigo do Endere'#231'o'
-              'CEP'
               'Logradouro'
               'Todos os Registros')
           end

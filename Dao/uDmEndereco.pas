@@ -91,8 +91,7 @@ procedure TDMEndereco.ConsultaEndereco(TextoConsulta: string;
 var
   strComando: string;
 begin
-//  if trim(TextoConsulta) = '' then
-//      Strcomando := Strcomando + '  ';
+
 
   FDQueryConsulta.close;
   FDQueryConsulta.SQL.Clear;
@@ -112,7 +111,8 @@ begin
         strComando:= strComando + '  ';
       end;
   end;
-
+  if trim(TextoConsulta) = '' then
+    exit;
   strComando:= strComando + '    order by END_LOGRADOURO ASC';
 
 

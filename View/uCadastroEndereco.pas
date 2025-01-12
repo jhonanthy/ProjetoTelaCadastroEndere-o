@@ -51,6 +51,7 @@ type
     GbTipoConsulta: TGroupBox;
     RbConsultaviaXML: TRadioButton;
     RbConsultaviaJson: TRadioButton;
+    Memo1: TMemo;
     procedure sbConsultarClick(Sender: TObject);
     procedure SbNovoClick(Sender: TObject);
     procedure edtConsultaChange(Sender: TObject);
@@ -69,7 +70,7 @@ type
     FTipoRetornoApi: TTipoRetornoApi;
     FTipoConsulta: TTipoConsulta;
     procedure SetTipoOperacao(const Value: TTipoOperacao);
-    procedure CarregarEndereco;
+    procedure CarregarEndereco(CodigoEndereco: string);
     procedure Inserir;
     procedure Alterar;
     procedure Excluir;
@@ -114,7 +115,7 @@ begin
 
 end;
 
-procedure TfrmCadastro.CarregarEndereco;
+procedure TfrmCadastro.CarregarEndereco(CodigoEndereco:string);
 var
  Endereco:          TEndereco;
  EnderecoControler: TEnderecoController;
@@ -123,7 +124,7 @@ begin
   Endereco  := TEndereco.Create;
   EnderecoControler :=  TEnderecoController.Create;
   try
-   EnderecoControler.CarregaControles(Endereco,edtCodigo.Text);
+   EnderecoControler.CarregaControles(Endereco,CodigoEndereco);
    edtCodigo.Text       := inttostr(Endereco.CodigoEndereco);
    MaskEdtCEP.Text      := Endereco.CEP;
    edtLogradouro.Text   := Endereco.Logradouro;
@@ -355,6 +356,13 @@ begin
    // tira a mascara para verificar se o campo está vazio.
    vmascaraEdit := MaskEdtCEP.EditMask;
    MaskEdtCEP.EditMask := '';
+
+   if (trim(MaskEdtCEP.Text) <> '') and (edtLogradouro.Text <> '') then
+    begin
+     application.MessageBox('Caro usuario, se deseja pesquisar pelo CEP digite apenas ele , agora se deseja pesquisar pelo enbdereço completo não preencha o campo CEP!','Informação',MB_OK+MB_ICONINFORMATION);
+     exit;
+   end;
+
    if trim(MaskEdtCEP.Text) <> '' then
      FTipoConsulta := toCEP
    else
@@ -421,9 +429,10 @@ begin
    begin
     //se o registro não existe no banco.
     //inserir no banco
-     viaCep.ConsultaAPI(TipoConsulta,TipoRetornoApi,Endereco);
+     Endereco := viaCep.ConsultaAPI(TipoConsulta,TipoRetornoApi,Endereco);
      Endereco.CodigoEndereco:=  strtoint(EnderecoControler.TestandoDuplicacao('END_CODIGO', 'ENDERECO'));
      EnderecoControler.Inserir(Endereco,sErro);
+     CarregarEndereco(Endereco.CodigoEndereco.ToString);
 
    end;
 

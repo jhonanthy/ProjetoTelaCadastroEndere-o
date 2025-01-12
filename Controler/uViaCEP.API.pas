@@ -10,7 +10,7 @@ type
     private
       const URL_VIACEP_API =  'viacep.com.br/ws/';
     public
-     class procedure ConsultaAPI(const TipoConsulta: TTipoConsulta;TipoRetorno: TTipoRetornoApi; Endereco: TEndereco);
+     class function ConsultaAPI(const TipoConsulta: TTipoConsulta;TipoRetorno: TTipoRetornoApi; Endereco: TEndereco):TEndereco;
   end;
 
 const NAO_USAR_VARIAVEIS_GOLBAIS = '';
@@ -21,7 +21,7 @@ implementation
 
 
 
-class procedure TViacepApi.ConsultaAPI(const TipoConsulta: TTipoConsulta; TipoRetorno: TTipoRetornoApi; Endereco: TEndereco);
+class function TViacepApi.ConsultaAPI(const TipoConsulta: TTipoConsulta; TipoRetorno: TTipoRetornoApi; Endereco: TEndereco):TEndereco;
 var
   sErro:string;
   vConsulta: string;
@@ -71,7 +71,7 @@ begin
          case TipoRetorno of
            toJson:
            begin
-             Endereco := TJson.JsonToObject<TEndereco>(vReq.Response.JSonValue.ToString);
+             Result := TJson.JsonToObject<TEndereco>(vReq.Response.JSonValue.ToString);
            end;
            toXML:
            begin
@@ -83,6 +83,8 @@ begin
              Endereco.Localidade := XMLDoc.DocumentElement.ChildNodes['localidade'].text;
              Endereco.Bairro     := XMLDoc.DocumentElement.ChildNodes['bairro'].Text;
              Endereco.UF         := XMLDoc.DocumentElement.ChildNodes['uf'].Text;
+
+             Result := Endereco;
            end;
          end;
       end

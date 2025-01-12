@@ -315,6 +315,7 @@ object frmCadastro: TfrmCadastro
                 FBFBFBFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
                 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
                 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+              Visible = False
               OnClick = SbGravarClick
               ExplicitLeft = 230
             end
@@ -382,6 +383,7 @@ object frmCadastro: TfrmCadastro
                 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
                 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
                 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+              Visible = False
               OnClick = SbAlterarClick
               ExplicitLeft = 155
             end
@@ -469,23 +471,16 @@ object frmCadastro: TfrmCadastro
             Height = 13
             Caption = 'Cod:.'
           end
-          object lbNome: TLabel
-            Left = 96
-            Top = 14
-            Width = 31
-            Height = 13
-            Caption = 'Nome:'
-          end
           object Label3: TLabel
             Left = 9
-            Top = 69
+            Top = 141
             Width = 23
             Height = 13
             Caption = 'CEP:'
           end
           object sbConsultar: TSpeedButton
             Left = 123
-            Top = 56
+            Top = 128
             Width = 62
             Height = 30
             Caption = 'Consultar'
@@ -493,38 +488,31 @@ object frmCadastro: TfrmCadastro
           end
           object Label2: TLabel
             Left = 9
-            Top = 96
+            Top = 168
             Width = 62
             Height = 13
             Caption = 'Logradouro: '
           end
           object Label4: TLabel
             Left = 375
-            Top = 96
+            Top = 168
             Width = 32
             Height = 13
             Caption = 'Bairro:'
           end
           object lbUF: TLabel
-            Left = 567
-            Top = 96
+            Left = 375
+            Top = 195
             Width = 17
             Height = 13
             Caption = 'UF:'
           end
           object Label5: TLabel
-            Left = 3
-            Top = 119
-            Width = 57
+            Left = 10
+            Top = 191
+            Width = 40
             Height = 13
-            Caption = 'Localidade: '
-          end
-          object edtNome: TEdit
-            Left = 96
-            Top = 27
-            Width = 313
-            Height = 21
-            TabOrder = 0
+            Caption = 'Cidade: '
           end
           object edtCodigo: TEdit
             Left = 3
@@ -533,45 +521,71 @@ object frmCadastro: TfrmCadastro
             Height = 21
             Color = clBtnFace
             Enabled = False
-            TabOrder = 1
+            TabOrder = 0
           end
           object MaskEdtCEP: TMaskEdit
             Left = 38
-            Top = 61
+            Top = 133
             Width = 79
             Height = 21
             EditMask = '00000\-9999;1;_'
             MaxLength = 10
-            TabOrder = 2
+            TabOrder = 1
             Text = '     -    '
           end
           object edtLogradouro: TEdit
             Left = 69
-            Top = 92
+            Top = 164
             Width = 284
             Height = 21
-            TabOrder = 3
+            TabOrder = 2
           end
           object edtbairro: TEdit
             Left = 409
-            Top = 92
+            Top = 164
             Width = 133
+            Height = 21
+            TabOrder = 3
+          end
+          object edtUF: TEdit
+            Left = 408
+            Top = 191
+            Width = 25
             Height = 21
             TabOrder = 4
           end
-          object edtUF: TEdit
-            Left = 601
-            Top = 92
-            Width = 133
+          object edtLocalidade: TEdit
+            Left = 71
+            Top = 191
+            Width = 282
             Height = 21
             TabOrder = 5
           end
-          object edtLocalidade: TEdit
-            Left = 69
-            Top = 119
-            Width = 284
-            Height = 21
+          object GbTipoConsulta: TGroupBox
+            Left = 592
+            Top = 25
+            Width = 217
+            Height = 96
+            Caption = 'Escolha uma Op'#231#227'o para tipo de consulta:'
             TabOrder = 6
+            object RbConsultaviaXML: TRadioButton
+              Left = 24
+              Top = 55
+              Width = 113
+              Height = 17
+              Caption = 'XML'
+              TabOrder = 0
+              OnClick = RbConsultaviaXMLClick
+            end
+            object RbConsultaviaJson: TRadioButton
+              Left = 24
+              Top = 32
+              Width = 113
+              Height = 17
+              Caption = 'JSON'
+              TabOrder = 1
+              OnClick = RbConsultaviaJsonClick
+            end
           end
         end
       end
@@ -602,7 +616,7 @@ object frmCadastro: TfrmCadastro
             OnChange = edtConsultaChange
           end
           object cbPesquisa: TComboBox
-            Left = 499
+            Left = 497
             Top = 13
             Width = 146
             Height = 21
@@ -646,7 +660,7 @@ object frmCadastro: TfrmCadastro
           Columns = <
             item
               Expanded = False
-              FieldName = 'PES_CODIGO'
+              FieldName = 'END_CODIGO'
               Title.Caption = 'Codigo'
               Title.Font.Charset = DEFAULT_CHARSET
               Title.Font.Color = clWhite
@@ -657,8 +671,15 @@ object frmCadastro: TfrmCadastro
             end
             item
               Expanded = False
-              FieldName = 'PES_NOME'
-              Title.Caption = 'Nome'
+              FieldName = 'END_CEP'
+              Title.Caption = 'CEP'
+              Width = 64
+              Visible = True
+            end
+            item
+              Expanded = False
+              FieldName = 'END_LOGRADOURO'
+              Title.Caption = 'Logradouro'
               Title.Font.Charset = DEFAULT_CHARSET
               Title.Font.Color = clWhite
               Title.Font.Height = -11
@@ -669,12 +690,27 @@ object frmCadastro: TfrmCadastro
             end
             item
               Expanded = False
-              FieldName = 'USUARIO'
+              FieldName = 'END_BAIRRO'
+              Title.Caption = 'Bairro'
+              Width = 156
+              Visible = True
+            end
+            item
+              Expanded = False
+              FieldName = 'END_LOCALIDADE'
+              Title.Caption = 'Localidade'
               Title.Font.Charset = DEFAULT_CHARSET
               Title.Font.Color = clWhite
               Title.Font.Height = -11
               Title.Font.Name = 'Arial'
               Title.Font.Style = []
+              Width = 64
+              Visible = True
+            end
+            item
+              Expanded = False
+              FieldName = 'END_UF'
+              Title.Caption = 'UF'
               Width = 64
               Visible = True
             end>
@@ -684,8 +720,8 @@ object frmCadastro: TfrmCadastro
   end
   object DataSource1: TDataSource
     DataSet = DMEndereco.FDQueryConsulta
-    Left = 596
-    Top = 232
+    Left = 316
+    Top = 120
   end
   object RESTRequest1: TRESTRequest
     Client = RESTClient1

@@ -8,7 +8,7 @@ uses
 {$M+}
 
 type
-  TViaCepAPI = class(TJsonDTO)
+  TViaCep = class(TJsonDTO)
   private
     FBairro: string;
     FCep: string;

@@ -14,11 +14,12 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure ConsultaEndereco(TextoConsulta: string; TipoPesquisa: Integer);
-    procedure CarregaControles(Endereco: TEndereco; codigoEndereco: Integer);
+    procedure CarregaControles(Endereco: TEndereco; codigoEndereco: string);
     function Inserir(Endereco: TEndereco; var sErro: string ): boolean;
     function Alterar(Endereco: TEndereco; var sErro: string ): boolean;
     function Excluir(codigoEndereco: Integer; var sErro: string ): boolean;
     function TestandoDuplicacao(Chave: string; Tabela: string): string;
+    function ConsultaEnderecoBanco(Endereco: TEndereco): boolean;
   end;
 
 implementation
@@ -33,7 +34,7 @@ begin
 end;
 
 procedure TEnderecoController.CarregaControles(Endereco: TEndereco;
-  codigoEndereco: Integer);
+  codigoEndereco: string);
 begin
   DMEndereco.CarregaControles(Endereco, codigoEndereco);
 end;
@@ -42,6 +43,11 @@ procedure TEnderecoController.ConsultaEndereco(TextoConsulta: string;
   TipoPesquisa: Integer);
 begin
   DMEndereco.ConsultaEndereco(TextoConsulta,TipoPesquisa);
+end;
+
+function TEnderecoController.ConsultaEnderecoBanco(Endereco: TEndereco): boolean;
+begin
+  Result:= DMEndereco.ConsultaEnderecoBanco(Endereco);
 end;
 
 constructor TEnderecoController.Create;

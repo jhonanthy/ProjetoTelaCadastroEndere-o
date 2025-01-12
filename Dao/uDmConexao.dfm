@@ -1,17 +1,12 @@
 object DMConexao: TDMConexao
-  OldCreateOrder = False
+  OnCreate = DataModuleCreate
   Height = 486
   Width = 768
-  object FDQueryAutenticacao: TFDQuery
-    Connection = FDConnection1
-    Left = 208
-    Top = 80
-  end
   object FDConnection1: TFDConnection
     Params.Strings = (
       
-        'Database=C:\Users\jhona\Documents\Embarcadero\Studio\Projects\Si' +
-        'sPessoaCad\Base_dados\DB_SISCADASTROPESSOA.FDB'
+        'Database=C:\Users\teste2\Documents\GitHub\ProjetoTelaCadastroEnd' +
+        'ere-o\Aplica'#231#227'o\Base\DB_SISCADASTROENDERECO.FDB'
       'User_Name=SYSDBA'
       'Password=masterkey'
       'DriverID=FB')

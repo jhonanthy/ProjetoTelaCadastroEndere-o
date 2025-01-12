@@ -12,14 +12,14 @@ uses
 
 type
   TDMConexao = class(TDataModule)
-    FDQueryAutenticacao: TFDQuery;
     FDConnection1: TFDConnection;
     FDTransaction1: TFDTransaction;
+    procedure DataModuleCreate(Sender: TObject);
   private
     { Private declarations }
   public
     { Public declarations }
-  function AutenticaEntrada(sLogin,sSenha: string):boolean;
+  procedure ConectaBanco;
   end;
 
 var
@@ -35,20 +35,15 @@ implementation
 
 { TDMConexao }
 
-function TDMConexao.AutenticaEntrada(sLogin, sSenha: string): boolean;
+procedure TDMConexao.ConectaBanco;
 begin
- Result:= false;
+  DMConexao.FDConnection1.Params.Database := ExtractFilePath(ParamStr(0))+'Base\DB_SISCADASTROENDERECO.FDB';
+  DMConexao.FDTransaction1.Connection:= DMConexao.FDConnection1;
+end;
 
-  FDQueryAutenticacao.Close;
-  FDQueryAutenticacao.sql.Clear;
-  FDQueryAutenticacao.sql.add(' SELECT * FROM PESSOA WHERE USUARIO = :Usuario and SENHA = :Senha');
-  FDQueryAutenticacao.ParamByName('Usuario').AsString:= sLogin;
-  FDQueryAutenticacao.ParamByName('Senha').AsString:= sSenha;
-  FDQueryAutenticacao.Open;
-
-  if not FDQueryAutenticacao.IsEmpty then
-      Result:= true;
-
+procedure TDMConexao.DataModuleCreate(Sender: TObject);
+begin
+  ConectaBanco;
 end;
 
 end.

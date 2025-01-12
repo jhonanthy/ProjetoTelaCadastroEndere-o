@@ -9,7 +9,7 @@ uses
   IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP, uLkJSON,
   IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack, IdSSL, IdSSLOpenSSL,
   REST.Types, REST.Client, Data.Bind.Components, Data.Bind.ObjectScope,
-  uEnderecoEnum, uEnderecoController, uEndereco.Model, uDmEndereco, uDmConexao;
+  uEnderecoEnum, uEnderecoController, uEndereco.Model, uDmEndereco, uDmConexao, uViaCEP.API;
 
 type
   TfrmCadastro = class(TForm)
@@ -32,8 +32,6 @@ type
     cbPesquisa: TComboBox;
     DBGrid1: TDBGrid;
     Label1: TLabel;
-    lbNome: TLabel;
-    edtNome: TEdit;
     DataSource1: TDataSource;
     RESTRequest1: TRESTRequest;
     RESTClient1: TRESTClient;
@@ -50,6 +48,9 @@ type
     edtUF: TEdit;
     Label5: TLabel;
     edtLocalidade: TEdit;
+    GbTipoConsulta: TGroupBox;
+    RbConsultaviaXML: TRadioButton;
+    RbConsultaviaJson: TRadioButton;
     procedure sbConsultarClick(Sender: TObject);
     procedure SbNovoClick(Sender: TObject);
     procedure edtConsultaChange(Sender: TObject);
@@ -61,18 +62,26 @@ type
     procedure DBGrid1DblClick(Sender: TObject);
     procedure Sb_LimparClick(Sender: TObject);
     procedure Sb_ExcluirClick(Sender: TObject);
+    procedure RbConsultaviaJsonClick(Sender: TObject);
+    procedure RbConsultaviaXMLClick(Sender: TObject);
   private
     FTipoOperacao: TTipoOperacao;
+    FTipoRetornoApi: TTipoRetornoApi;
+    FTipoConsulta: TTipoConsulta;
     procedure SetTipoOperacao(const Value: TTipoOperacao);
-    procedure CarregarPessoa;
+    procedure CarregarEndereco;
     procedure Inserir;
     procedure Alterar;
     procedure Excluir;
     procedure Gravar;
     procedure HabilitaControles(Value:TTipoOperacao);
     procedure LimpaControles;
+    procedure SetTipoRetornoApi(const Value: TTipoRetornoApi);
+    procedure SetTipoConsulta(const Value: TTipoConsulta);
   public
     property TipoOperacao: TTipoOperacao  read FTipoOperacao write SetTipoOperacao;
+    property TipoRetornoApi: TTipoRetornoApi read FTipoRetornoApi write SetTipoRetornoApi;
+    property TipoConsulta: TTipoConsulta read FTipoConsulta write SetTipoConsulta;
   end;
 
 var
@@ -105,7 +114,7 @@ begin
 
 end;
 
-procedure TfrmCadastro.CarregarPessoa;
+procedure TfrmCadastro.CarregarEndereco;
 var
  Endereco:          TEndereco;
  EnderecoControler: TEnderecoController;
@@ -114,7 +123,7 @@ begin
   Endereco  := TEndereco.Create;
   EnderecoControler :=  TEnderecoController.Create;
   try
-   EnderecoControler.CarregaControles(Endereco,strtoint(edtCodigo.Text));
+   EnderecoControler.CarregaControles(Endereco,edtCodigo.Text);
    edtCodigo.Text       := inttostr(Endereco.CodigoEndereco);
    MaskEdtCEP.Text      := Endereco.CEP;
    edtLogradouro.Text   := Endereco.Logradouro;
@@ -130,9 +139,9 @@ end;
 
 procedure TfrmCadastro.cbPesquisaChange(Sender: TObject);
 var
-Text:string;
+  Text:string;
 begin
-Text:=trim(edtConsulta.text);
+  Text:=trim(edtConsulta.text);
   if cbPesquisa.ItemIndex = 2 then
   begin
     edtConsulta.Text:=' ';
@@ -159,7 +168,7 @@ begin
    EnderecoControler  := TEnderecoController.Create;
    Endereco           := TEndereco.Create;
    try
-      EnderecoControler.CarregaControles(Endereco,DMEndereco.FDQueryConsulta.FieldByName('END_CODIGO').AsInteger);
+      EnderecoControler.CarregaControles(Endereco,DMEndereco.FDQueryConsulta.FieldByName('END_CODIGO').AsString);
       edtCodigo.Text       := inttostr(Endereco.CodigoEndereco);
       MaskEdtCEP.Text      := Endereco.CEP;
       edtLogradouro.Text   := Endereco.Logradouro;
@@ -252,13 +261,13 @@ case  TipoOperacao of
        Sb_Excluir.Enabled     :=  false;
        SbNovo.Enabled         :=  false;
        SbGravar.Enabled       :=  true;
+       sbConsultar.Enabled    :=  true;
        MaskEdtCEP.Enabled     :=  true;
        edtLogradouro.Enabled  :=  true;
        edtLocalidade.Enabled  :=  true;
        edtbairro.Enabled      :=  true;
        edtUF.Enabled          :=  true;
-
-
+       GbTipoConsulta.Enabled := true;
      end
   else
      begin
@@ -267,11 +276,13 @@ case  TipoOperacao of
       SbAlterar.Enabled:=true;
       SbNovo.Enabled:=true;
       SbGravar.Enabled:=false;
-      MaskEdtCEP.Enabled     :=  true;
-      edtLogradouro.Enabled  :=  true;
-      edtLocalidade.Enabled  :=  true;
-      edtbairro.Enabled      :=  true;
-      edtUF.Enabled          :=  true;
+      sbConsultar.Enabled := false;
+      MaskEdtCEP.Enabled     :=  false;
+      edtLogradouro.Enabled  :=  false;
+      edtLocalidade.Enabled  :=  false;
+      edtbairro.Enabled      :=  false;
+      edtUF.Enabled          :=  false;
+      GbTipoConsulta.Enabled := false;
      end;
   end;
 end;
@@ -294,7 +305,7 @@ begin
    if EnderecoControler.Inserir(Endereco, sErro) = false then
       raise Exception.Create(sErro);
   finally
-    application.MessageBox('Pessoa cadastrada com sucesso!','Informação',MB_OK+MB_ICONINFORMATION);
+    application.MessageBox('Endereço cadastrado com sucesso!','Informação',MB_OK+MB_ICONINFORMATION);
 
   end;
 end;
@@ -308,6 +319,16 @@ begin
    edtUF.clear;
 end;
 
+procedure TfrmCadastro.RbConsultaviaJsonClick(Sender: TObject);
+begin
+ FTipoRetornoApi := toJson;
+end;
+
+procedure TfrmCadastro.RbConsultaviaXMLClick(Sender: TObject);
+begin
+  FTipoRetornoApi := toXML;
+end;
+
 procedure TfrmCadastro.SbAlterarClick(Sender: TObject);
 begin
  FTipoOperacao := toUpdate;
@@ -316,22 +337,96 @@ end;
 
 procedure TfrmCadastro.SbCancelarClick(Sender: TObject);
 begin
-HabilitaControles(toSelect);
+  HabilitaControles(toSelect);
 end;
 
 procedure TfrmCadastro.sbConsultarClick(Sender: TObject);
 var
   http:              TIdHTTP;
   js:                TlkJSONobject;
+  viaCep:            TViacepApi;
+  Endereco:          TEndereco;
+  EnderecoControler: TEnderecoController;
+  sErro: string;
+  vmascaraEdit: string;
+  confExcl:integer;
 begin
   try
-  RESTClient1.BaseURL:= 'viacep.com.br/ws/'+trim(MaskEdtCEP.Text)+'/json/';
-  RESTRequest1.Execute;
-  js    := TlkJSON.ParseText(RESTRequest1.Response.JSONText) as TlkJSONobject;
+   // tira a mascara para verificar se o campo está vazio.
+   vmascaraEdit := MaskEdtCEP.EditMask;
+   MaskEdtCEP.EditMask := '';
+   if trim(MaskEdtCEP.Text) <> '' then
+     FTipoConsulta := toCEP
+   else
+     FTipoConsulta := toEnderecoCompleto;
 
-  edtLogradouro.Text := js.Field['logradouro'].Value;
-  edtbairro.Text     := js.Field['bairro'].Value;
-  edtUF.Text         := js.Field['uf'].Value;
+   MaskEdtCEP.EditMask := vmascaraEdit;
+
+   Endereco := TEndereco.Create;
+   EnderecoControler := TEnderecoController.Create;
+   viaCep :=  TViacepApi.Create;
+   // se for por endereço completo
+   case TipoConsulta of
+     toCEP: Endereco.CEP := trim(MaskEdtCEP.Text);
+     toEnderecoCompleto:
+     begin
+      Endereco.UF := trim(edtUF.text);
+      Endereco.Localidade := trim(edtLocalidade.Text);
+      Endereco.Logradouro := trim(edtLogradouro.Text);
+     end;
+   end;
+
+   if not(self.RbConsultaviaJson.Checked) and not(self.RbConsultaviaXML.Checked) then
+   begin
+     application.MessageBox('Não foi selecionada nenhuma opção para o tipo de consulta JSON ou XML!','Atenção',MB_OK+MB_ICONWARNING);
+     exit;
+   end;
+
+   if EnderecoControler.ConsultaEnderecoBanco(Endereco) then
+   begin
+     // se existe o registro no banco eu ja deixo previamente o Endereco carregado.
+     EnderecoControler.CarregaControles(Endereco,Endereco.CEP);
+     beep;
+    confExcl:= Application.MessageBox('Caro Usuario o cep digitado já está cadastro , deseja visualizar o endereço', 'Informação', MB_YesNo +mb_DefButton2 +MB_ICONINFORMATION);
+    if confExcl = IDYes then
+    begin
+     // se quiser visualizar os dados.
+      edtCodigo.Text       := inttostr(Endereco.CodigoEndereco);
+      MaskEdtCEP.Text      := Endereco.CEP;
+      edtLogradouro.Text   := Endereco.Logradouro;
+      edtLocalidade.Text   := Endereco.Localidade;
+      edtbairro.Text       := Endereco.Bairro;
+      edtUF.Text           := Endereco.UF;
+      exit;
+    end
+    else
+    begin
+      beep;
+      confExcl:= Application.MessageBox('Caro Usuario você deseja Atualizar o registro do endereço existente', 'Informação', MB_YesNo +mb_DefButton2 +MB_ICONINFORMATION);
+      if confExcl = IDYes then
+      begin
+        //caso deseja alterar o registro existente.
+        viaCep.ConsultaAPI(TipoConsulta,TipoRetornoApi,Endereco);
+        EnderecoControler.Alterar(Endereco,sErro);
+      end
+      else
+      begin
+        // se não quiser atualizar  jogo o foco de volta no campo do cep.
+        if MaskEdtCEP.CanFocus then
+          MaskEdtCEP.SetFocus;
+      end;
+    end;
+   end
+   else
+   begin
+    //se o registro não existe no banco.
+    //inserir no banco
+     viaCep.ConsultaAPI(TipoConsulta,TipoRetornoApi,Endereco);
+     Endereco.CodigoEndereco:=  strtoint(EnderecoControler.TestandoDuplicacao('END_CODIGO', 'ENDERECO'));
+     EnderecoControler.Inserir(Endereco,sErro);
+
+   end;
+
   except
     Application.MessageBox('Não foi Possivel Consultar o CEP!','ERRO',MB_OK+MB_ICONEXCLAMATION);
       exit;
@@ -356,7 +451,7 @@ begin
   FTipoOperacao := toInsert;
   HabilitaControles(toInsert);
 
-   edtCodigo.Text := EnderecoControler.TestandoDuplicacao('PES_CODIGO', 'PESSOA');
+   edtCodigo.Text := EnderecoControler.TestandoDuplicacao('END_CODIGO', 'ENDERECO');
 end;
 
 procedure TfrmCadastro.Sb_ExcluirClick(Sender: TObject);
@@ -371,9 +466,19 @@ begin
 LimpaControles;
 end;
 
+procedure TfrmCadastro.SetTipoConsulta(const Value: TTipoConsulta);
+begin
+  FTipoConsulta := Value;
+end;
+
 procedure TfrmCadastro.SetTipoOperacao(const Value: TTipoOperacao);
 begin
   FTipoOperacao := Value;
+end;
+
+procedure TfrmCadastro.SetTipoRetornoApi(const Value: TTipoRetornoApi);
+begin
+  FTipoRetornoApi := Value;
 end;
 
 end.

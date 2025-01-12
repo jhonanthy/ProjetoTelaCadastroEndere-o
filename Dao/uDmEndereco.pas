@@ -13,23 +13,22 @@ type
   TDMEndereco = class(TDataModule)
     FDQueryConsulta: TFDQuery;
     FDQueryCRUD: TFDQuery;
-    FDQueryConsultaPES_CODIGO: TIntegerField;
-    FDQueryConsultaPES_NOME: TStringField;
-    FDQueryConsultaUSUARIO: TStringField;
-    FDQueryConsultaSENHA: TStringField;
-    FDQueryConsultaPES_CEP: TStringField;
-    FDQueryConsultaPES_LOGRADOURO: TStringField;
-    FDQueryConsultaPES_BAIRRO: TStringField;
-    FDQueryConsultaPES_UF: TStringField;
+    FDQueryConsultaEND_CODIGO: TIntegerField;
+    FDQueryConsultaEND_CEP: TStringField;
+    FDQueryConsultaEND_LOGRADOURO: TStringField;
+    FDQueryConsultaEND_LOCALIDADE: TStringField;
+    FDQueryConsultaEND_BAIRRO: TStringField;
+    FDQueryConsultaEND_UF: TStringField;
   private
     { Private declarations }
   public
-    Procedure CarregaControles(Endereco :TEndereco; codigoEndereco: Integer);
+    Procedure CarregaControles(Endereco :TEndereco; codigoEndereco: string);
     procedure ConsultaEndereco(TextoConsulta: string; TipoPesquisa: Integer);
     function  Inserir(Endereco :TEndereco; out sErro: string):boolean;
     function  Alterar(Endereco :TEndereco; out sErro: string):boolean;
     function  Excluir(codigoEndereco: Integer; out sErro: string): boolean;
     function  TestandoDuplicacao(Chave: string; Tabela: string): string;
+    function ConsultaEnderecoBanco(Endereco: TEndereco):boolean;
 end;
 
 var
@@ -62,13 +61,20 @@ begin
   end;
 end;
 
-procedure TDMEndereco.CarregaControles(Endereco: TEndereco; codigoEndereco: integer);
+procedure TDMEndereco.CarregaControles(Endereco: TEndereco; codigoEndereco: string);
 begin
-
+//receber um codigo de endereço que pode ser o codigo do registro ou o codigo do endereço(cep)
   FDQueryConsulta.close;
   FDQueryConsulta.SQL.Clear;
-  FDQueryConsulta.sql.Add('SELECT END_CODIGO, END_CEP, END_LOGRADOURO, END_LOCALIDADE ,END_BAIRRO, END_UF FROM ENDERECO WHERE END_CODIGO = :codigo');
-  FDQueryConsulta.ParamByName('codigo').AsInteger := codigoEndereco;
+  FDQueryConsulta.sql.Add('SELECT END_CODIGO, END_CEP, END_LOGRADOURO, END_LOCALIDADE ,END_BAIRRO, END_UF FROM ENDERECO WHERE ');
+  if copy(codigoEndereco,6,1) = '-' then
+    FDQueryConsulta.sql.Add(' END_CEP =:codigo')
+  else
+    FDQueryConsulta.sql.Add(' END_CODIGO = :codigo ');
+
+    FDQueryConsulta.ParamByName('codigo').asstring:= codigoEndereco;
+
+
   FDQueryConsulta.Open;
 
 
@@ -93,7 +99,7 @@ begin
   strComando := ' SELECT * FROM ENDERECO ';
 
   case TipoPesquisa of
-    0:  //Codigo do Enredeço
+    0:  //Codigo do Endereço
       begin
          strComando := strComando + ' WHERE END_CODIGO = '+ trim(TextoConsulta);
       end;
@@ -115,6 +121,37 @@ begin
 
   if FDQueryConsulta.IsEmpty then
       application.MessageBox('Consulta não encontrada na Base!','Informação',MB_OK+MB_ICONINFORMATION);
+end;
+
+function TDMEndereco.ConsultaEnderecoBanco(Endereco: TEndereco): boolean;
+var
+  vqueryConsulta:TFDQuery;
+  vstrComando: string;
+begin
+  vqueryConsulta :=  TFDQuery.Create(nil);
+  vqueryConsulta.Connection := DMConexao.FDConnection1;
+  vqueryConsulta.close;
+  vqueryConsulta.SQL.add(' SELECT END_CEP FROM ENDERECO where ');
+  if not(Endereco.CEP.IsEmpty) then
+  begin
+    vqueryConsulta.SQL.add(' END_CEP =:cep  ');
+    vqueryConsulta.ParamByName('cep').AsString := Endereco.CEP;
+  end
+  else
+  begin
+    vqueryConsulta.SQL.add(' END_UF =:uf ');
+    vstrComando:=' AND END_LOCALIDADE LIKE '+quotedstr('%'+ (Endereco.Localidade)+'%') + sLineBreak;
+    vstrComando:= vstrComando +' AND END_Logradouro LIKE '+quotedstr('%'+ (Endereco.Localidade)+'%');
+    vqueryConsulta.SQL.add(vstrComando);
+    vqueryConsulta.ParamByName('uf').AsString := Endereco.UF;
+  end;
+  vqueryConsulta.Open;
+  if not  vqueryConsulta.IsEmpty then
+    Endereco.CEP := vqueryConsulta.FieldByName('END_CEP').AsString;
+
+  result := not vqueryConsulta.IsEmpty;
+
+  vqueryConsulta.Free;
 end;
 
 function TDMEndereco.Excluir(codigoEndereco: Integer; out sErro: string): boolean;

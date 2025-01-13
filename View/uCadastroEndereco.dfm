@@ -592,11 +592,13 @@ object frmCadastro: TfrmCadastro
             Top = 27
             Width = 454
             Height = 100
+            Enabled = False
             Lines.Strings = (
               'Caro usuario , seja bem vindo.'
               
-                'Para iniciar a consulta preencha o CEP ou o endere'#231'o completo e ' +
-                'escolha o metodo de '
+                'Para iniciar a consulta clique no bot'#227'o Novo,  preencha o CEP ou' +
+                ' o endere'#231'o completo e '
+              'escolha o metodo de '
               'retorno da API.'
               'e Clique em Consulta.'
               'Desde j'#225' agradecemos a utiliza'#231#227'o de nossa aplica'#231#227'o.'
@@ -689,6 +691,11 @@ object frmCadastro: TfrmCadastro
               Expanded = False
               FieldName = 'END_CEP'
               Title.Caption = 'CEP'
+              Title.Font.Charset = DEFAULT_CHARSET
+              Title.Font.Color = clWhite
+              Title.Font.Height = -11
+              Title.Font.Name = 'Arial'
+              Title.Font.Style = []
               Width = 64
               Visible = True
             end
@@ -701,13 +708,18 @@ object frmCadastro: TfrmCadastro
               Title.Font.Height = -11
               Title.Font.Name = 'Arial'
               Title.Font.Style = []
-              Width = 64
+              Width = 278
               Visible = True
             end
             item
               Expanded = False
               FieldName = 'END_BAIRRO'
               Title.Caption = 'Bairro'
+              Title.Font.Charset = DEFAULT_CHARSET
+              Title.Font.Color = clWhite
+              Title.Font.Height = -11
+              Title.Font.Name = 'Arial'
+              Title.Font.Style = []
               Width = 156
               Visible = True
             end
@@ -727,6 +739,11 @@ object frmCadastro: TfrmCadastro
               Expanded = False
               FieldName = 'END_UF'
               Title.Caption = 'UF'
+              Title.Font.Charset = DEFAULT_CHARSET
+              Title.Font.Color = clWhite
+              Title.Font.Height = -11
+              Title.Font.Name = 'Arial'
+              Title.Font.Style = []
               Width = 64
               Visible = True
             end>

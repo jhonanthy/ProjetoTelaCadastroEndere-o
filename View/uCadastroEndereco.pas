@@ -18,11 +18,7 @@ type
     tbFicha: TTabSheet;
     pnlTop: TPanel;
     Panel3: TPanel;
-    Imprimir: TSpeedButton;
     Sb_Limpar: TSpeedButton;
-    Sb_Excluir: TSpeedButton;
-    SbGravar: TSpeedButton;
-    SbAlterar: TSpeedButton;
     SbNovo: TSpeedButton;
     tbConsulta: TTabSheet;
     GroupBox1: TGroupBox;
@@ -57,8 +53,6 @@ type
     procedure edtConsultaChange(Sender: TObject);
     procedure cbPesquisaChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure SbAlterarClick(Sender: TObject);
-    procedure SbGravarClick(Sender: TObject);
     procedure SbCancelarClick(Sender: TObject);
     procedure DBGrid1DblClick(Sender: TObject);
     procedure Sb_LimparClick(Sender: TObject);
@@ -256,12 +250,9 @@ begin
 
 case  TipoOperacao of
 
-  toInsert,toUpdate :
+  toInsert :
      begin
-       SbAlterar.Enabled      :=  false;
-       Sb_Excluir.Enabled     :=  false;
-       SbNovo.Enabled         :=  false;
-       SbGravar.Enabled       :=  true;
+       SbNovo.Enabled         := false;
        sbConsultar.Enabled    :=  true;
        MaskEdtCEP.Enabled     :=  true;
        edtLogradouro.Enabled  :=  true;
@@ -273,10 +264,7 @@ case  TipoOperacao of
   else
      begin
 
-      Sb_Excluir.Enabled:=true;
-      SbAlterar.Enabled:=true;
       SbNovo.Enabled:=true;
-      SbGravar.Enabled:=false;
       sbConsultar.Enabled := false;
       MaskEdtCEP.Enabled     :=  false;
       edtLogradouro.Enabled  :=  false;
@@ -330,12 +318,6 @@ begin
   FTipoRetornoApi := toXML;
 end;
 
-procedure TfrmCadastro.SbAlterarClick(Sender: TObject);
-begin
- FTipoOperacao := toUpdate;
- HabilitaControles(toUpdate);
-end;
-
 procedure TfrmCadastro.SbCancelarClick(Sender: TObject);
 begin
   HabilitaControles(toSelect);
@@ -356,29 +338,40 @@ begin
    // tira a mascara para verificar se o campo está vazio.
    vmascaraEdit := MaskEdtCEP.EditMask;
    MaskEdtCEP.EditMask := '';
-
+   // validar qual o metodo da entrada da consulta , se é via cep ou endereço completo
    if (trim(MaskEdtCEP.Text) <> '') and (edtLogradouro.Text <> '') then
     begin
      application.MessageBox('Caro usuario, se deseja pesquisar pelo CEP digite apenas ele , agora se deseja pesquisar pelo enbdereço completo não preencha o campo CEP!','Informação',MB_OK+MB_ICONINFORMATION);
      exit;
    end;
-
-   if ((Length(trim(MaskEdtCEP.Text))<3 ) or (((Length(trim(edtLogradouro.Text))<3) or (Length(trim(edtLocalidade.Text))<3)) and not(Length(trim(MaskEdtCEP.Text))>3)))    then
+   // validação de no minimo 3 caracteres para realizar a consulta por endereço completo
+   if ( ((Length(trim(MaskEdtCEP.Text))<3) and (Length(trim(edtLogradouro.Text))< 3))
+    or (((Length(trim(edtLogradouro.Text))<3) or (Length(trim(edtLocalidade.Text))<3)) and not(Length(trim(MaskEdtCEP.Text))>3)))    then
    begin
      application.MessageBox('Caro Usuario os campos a serem utilizados, devem ter no minimo 3 caracteres com excessão do campo UF!','Informação',MB_OK+MB_ICONINFORMATION);
      exit;
    end;
+
+   // só devo realizar a consulta se selecionar o json ou XML como opção.
+   if not(self.RbConsultaviaJson.Checked) and not(self.RbConsultaviaXML.Checked) then
+   begin
+     application.MessageBox('Não foi selecionada nenhuma opção para o tipo de consulta JSON ou XML!','Atenção',MB_OK+MB_ICONWARNING);
+     exit;
+   end;
+
+  // se ouver cep digitado logo é consulta via cep.
    if trim(MaskEdtCEP.Text) <> '' then
      FTipoConsulta := toCEP
    else
      FTipoConsulta := toEnderecoCompleto;
-
+   // colocando a mascara de volta do cep para salvar depois no banco
    MaskEdtCEP.EditMask := vmascaraEdit;
 
    Endereco := TEndereco.Create;
    EnderecoControler := TEnderecoController.Create;
    viaCep :=  TViacepApi.Create;
-   // se for por endereço completo
+
+   // armazeno previamento os dados no Endereço para usar na consulta de endereço
    case TipoConsulta of
      toCEP: Endereco.CEP := trim(MaskEdtCEP.Text);
      toEnderecoCompleto:
@@ -388,13 +381,7 @@ begin
       Endereco.Logradouro := trim(edtLogradouro.Text);
      end;
    end;
-
-   if not(self.RbConsultaviaJson.Checked) and not(self.RbConsultaviaXML.Checked) then
-   begin
-     application.MessageBox('Não foi selecionada nenhuma opção para o tipo de consulta JSON ou XML!','Atenção',MB_OK+MB_ICONWARNING);
-     exit;
-   end;
-
+   {Consulto o endereço no banco tanto por cep quanto pelo Endereço Completo}
    if EnderecoControler.ConsultaEnderecoBanco(Endereco) then
    begin
      // se existe o registro no banco eu ja deixo previamente o Endereco carregado.
@@ -435,9 +422,13 @@ begin
     //se o registro não existe no banco.
     //inserir no banco
      Endereco := viaCep.ConsultaAPI(TipoConsulta,TipoRetornoApi,Endereco);
-     Endereco.CodigoEndereco:=  strtoint(EnderecoControler.TestandoDuplicacao('END_CODIGO', 'ENDERECO'));
-     EnderecoControler.Inserir(Endereco,sErro);
-     CarregarEndereco(Endereco.CodigoEndereco.ToString);
+     if FTipoConsulta = toCEP then
+     begin
+      Endereco.CodigoEndereco:=  strtoint(EnderecoControler.TestandoDuplicacao('END_CODIGO', 'ENDERECO'));
+      EnderecoControler.Inserir(Endereco,sErro);
+      CarregarEndereco(Endereco.CodigoEndereco.ToString);
+     end;
+
 
    end;
 
@@ -447,13 +438,6 @@ begin
   end;
 
 
-end;
-
-procedure TfrmCadastro.SbGravarClick(Sender: TObject);
-begin
-  Gravar;
-  FTipoOperacao := toSelect;
-  HabilitaControles(toSelect);
 end;
 
 procedure TfrmCadastro.SbNovoClick(Sender: TObject);

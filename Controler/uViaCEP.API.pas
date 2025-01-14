@@ -33,7 +33,7 @@ var
   JSONObject: ISuperObject;
   JSONArray: TSuperArray;
   i: integer;
-  vCEPexitente: string;
+  vCEPexitente,teste: string;
   EnderecoController: TEnderecoController;
 begin
   EnderecoController := TEnderecoController.Create;
@@ -97,12 +97,14 @@ begin
            JSONObject := SO(JSONString);
            JSONArray := JSONObject.AsArray;
            Endereco.CodigoEndereco:=  strtoint(EnderecoController.TestandoDuplicacao('END_CODIGO', 'ENDERECO'));
+
            for i := 0 to JSONArray.Length - 1 do
            begin
             { Quando a entrada for de pesquisa por endereco , e o registro existir no banco
               não insere o registro novamente.}
-             if vCEPexitente <> JSONArray[i].S['cep'] then
+
              begin
+
                Endereco.CleanupInstance;
                Endereco.CEP        := JSONArray[i].S['cep'];
                Endereco.Logradouro := JSONArray[i].S['logradouro'];
@@ -110,9 +112,40 @@ begin
                Endereco.Bairro     := JSONArray[i].S['bairro'];
                Endereco.UF         := JSONArray[i].S['uf'];
                Endereco.CodigoEndereco := Endereco.CodigoEndereco + 1 ;
-               EnderecoController.Inserir(Endereco,sErro)
+
+               if EnderecoController.ConsultaEnderecoBanco(Endereco) then
+                 EnderecoController.Alterar(Endereco,sErro)
+               else
+                 EnderecoController.Inserir(Endereco,sErro);
              end;
            end;
+
+          end;
+          toXML:
+          begin
+
+             XMLDoc := TXMLDocument.Create(nil);
+             XMLDoc.LoadFromXML(vReq.Response.Content);
+             Endereco.CodigoEndereco:=  strtoint(EnderecoController.TestandoDuplicacao('END_CODIGO', 'ENDERECO'));
+             var vListXML := XMLDoc.DocumentElement.ChildNodes.FindNode('enderecos').ChildNodes;
+             for I := 0 to vListXML.Count -1 do
+             begin
+
+
+               Endereco.CleanupInstance;
+               Endereco.CEP := vListXML.findnode('endereco').childnodes.findnode('cep').text;
+               Endereco.Logradouro := vListXML.findnode('endereco').childnodes.findnode('logradouro').text;
+               Endereco.Localidade := vListXML.findnode('endereco').childnodes.findnode('localidade').text;
+               Endereco.Bairro     := vListXML.findnode('endereco').childnodes.findnode('bairro').text;
+               Endereco.UF         := vListXML.findnode('endereco').childnodes.findnode('uf').text;
+
+               Endereco.CodigoEndereco := Endereco.CodigoEndereco + 1 ;
+
+               if EnderecoController.ConsultaEnderecoBanco(Endereco) then
+                 EnderecoController.Alterar(Endereco,sErro)
+               else
+                 EnderecoController.Inserir(Endereco,sErro);
+             end;
 
           end;
         end;

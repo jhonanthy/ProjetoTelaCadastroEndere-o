@@ -141,7 +141,7 @@ begin
   begin
     vqueryConsulta.SQL.add(' END_UF =:uf ');
     vstrComando:=' AND END_LOCALIDADE LIKE '+quotedstr('%'+ (Endereco.Localidade)+'%') + sLineBreak;
-    vstrComando:= vstrComando +' AND END_Logradouro LIKE '+quotedstr('%'+ (Endereco.Localidade)+'%');
+    vstrComando:= vstrComando +' AND END_Logradouro LIKE '+quotedstr('%'+ (Endereco.Logradouro)+'%');
     vqueryConsulta.SQL.add(vstrComando);
     vqueryConsulta.ParamByName('uf').AsString := Endereco.UF;
   end;
@@ -194,26 +194,27 @@ var
   strComando: string;
   NovoID, i : integer;
 begin
-    //rotina que evita duplicacao do campo chave
-
-  with FDQueryCRUD do
+  //rotina que evita duplicacao do campo chave
+  FDQueryCRUD.close;
+  FDQueryCRUD.SQL.Clear;
+  // Verifica se a tabela contém registros
+  strComando := 'SELECT COUNT(*) FROM ' + Tabela;
+  FDQueryCRUD.SQL.Add(strComando);
+  FDQueryCRUD.Open;
+  if FDQueryCRUD.FieldByName('COUNT').AsInteger = 0 then
+    NovoID := 1
+  else
   begin
-      close;
-      SQL.Clear;
-      SQL.Add('select max('+chave+') as UltimoRegistro from '+Tabela);
-
-      open;
-      NovoID:=(FieldByName('UltimoRegistro').AsInteger)+1;  //encontrei o novo registro e vou incrementar
-      for i:=1 to 10 do
-        try
-          result:=inttostr(NovoID);
-          break;
-        except
-          NovoID:=NovoID+1;
-        end;
-
+    // Busca o maior valor do campo chave
+    strComando := 'SELECT MAX(' + Chave + ') AS UltimoRegistro FROM ' + Tabela;
+    FDQueryCRUD.SQL.Clear;
+    FDQueryCRUD.SQL.Add(strComando);
+    FDQueryCRUD.Open;
+    NovoID := FDQueryCRUD.FieldByName('UltimoRegistro').AsInteger + 1;
   end;
 
+  // Retorna o novo ID como string
+  Result := IntToStr(NovoID);
 end;
 
 end.
